@@ -435,3 +435,38 @@ export async function getAnalytics() {
     pendingFollowUps: pending,
   };
 }
+
+// Edit visitor
+export async function updateVisitor(
+  id: string,
+  name: string,
+  phoneNumber: string,
+  dateVisited: string
+) {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('visitors')
+      .update({
+        name,
+        phone_number: phoneNumber,
+        date_visited: dateVisited,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  initializeMockData();
+  const visitor = mockVisitors.find((v) => v.id === id);
+  if (visitor) {
+    visitor.name = name;
+    visitor.phone_number = phoneNumber;
+    visitor.date_visited = dateVisited;
+    visitor.updated_at = new Date().toISOString();
+  }
+  return visitor;
+}

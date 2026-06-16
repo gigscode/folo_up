@@ -59,6 +59,18 @@ export default function Navigation() {
             <span className="text-xl">📊</span>
             <span className="text-xs mt-1 font-medium">Analytics</span>
           </Link>
+
+          <Link
+            href="/admin/login"
+            className={`flex flex-col items-center justify-center w-16 h-16 transition-colors ${
+              isActive('/admin')
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span className="text-xl">🔐</span>
+            <span className="text-xs mt-1 font-medium">Admin</span>
+          </Link>
         </div>
       </div>
     </nav>
