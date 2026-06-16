@@ -1,23 +1,56 @@
-export default function Page() {
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Dashboard from '@/components/dashboard';
+import { isDatabaseConnected } from '@/lib/db';
+
+export default function Home() {
+  const [isDbConnected, setIsDbConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsDbConnected(isDatabaseConnected());
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isDbConnected) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-bold mb-4 text-foreground">FoloUp Setup Required</h1>
+          <p className="text-muted-foreground mb-6">
+            To use FoloUp, you need to connect Supabase. Please add the following environment variables:
+          </p>
+          <ul className="text-left bg-secondary/50 rounded-lg p-4 mb-6 text-sm font-mono">
+            <li className="mb-2">NEXT_PUBLIC_SUPABASE_URL</li>
+            <li>NEXT_PUBLIC_SUPABASE_ANON_KEY</li>
+          </ul>
+          <p className="text-sm text-muted-foreground mb-6">
+            Then create the database schema by running the SQL in <code className="bg-secondary/50 px-2 py-1 rounded">schema.sql</code>
+          </p>
+          <Link href="/setup-guide">
+            <Button className="w-full">View Setup Guide</Button>
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-[color:light-dark(#fff,#000)] text-[color:light-dark(#000,#fff)]">
-      <svg
-        aria-hidden="true"
-        className="size-20"
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p className="absolute left-1/2 top-[calc(50%+56px)] -translate-x-1/2 whitespace-nowrap text-sm font-medium text-muted-foreground">
-        Your v0 generation will show here.
-      </p>
+    <main className="min-h-screen bg-background">
+      <Dashboard />
     </main>
-  )
+  );
 }
