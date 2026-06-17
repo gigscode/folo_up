@@ -8,6 +8,7 @@ import { getAllVisitors, getAnalytics, deleteVisitor } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import BulkUploadCSV from '@/components/bulk-upload-csv';
 import MessageTemplateEditor from '@/components/message-template-editor';
+import Navigation from '@/components/navigation';
 import { Visitor } from '@/lib/db';
 
 export default function AdminDashboard() {
@@ -79,7 +80,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
         {/* Navigation Tabs */}
         <div className="flex gap-4 mb-8 border-b border-border overflow-x-auto">
           {(['overview', 'upload', 'manage', 'messages'] as const).map((tab) => (
@@ -225,6 +226,9 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+      
+      {/* Mobile Navigation */}
+      <Navigation />
     </main>
   );
 }
