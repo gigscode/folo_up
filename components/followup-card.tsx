@@ -3,8 +3,55 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { generateWhatsAppLink, formatDate, getDaysUntilFollowUp } from '@/lib/followup-engine';
+import { formatDate, getDaysUntilFollowUp } from '@/lib/followup-engine';
 import { markFollowUpComplete } from '@/lib/db';
+
+function WhatsAppChooser({ phone, message, onClose }: { phone: string; message: string; onClose: () => void }) {
+  const encodedMessage = encodeURIComponent(message);
+  const cleanPhone = phone.replace(/[^\d+]/g, '');
+
+  const openApp = (scheme: string) => {
+    window.location.href = `${scheme}://send?phone=${cleanPhone}&text=${encodedMessage}`;
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md bg-card rounded-t-2xl p-6 space-y-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-center text-sm font-semibold text-muted-foreground mb-2">Open with</p>
+        <Button
+          className="w-full font-semibold text-base"
+          size="lg"
+          onClick={() => openApp('whatsapp')}
+        >
+          WhatsApp
+        </Button>
+        <Button
+          className="w-full font-semibold text-base"
+          size="lg"
+          variant="outline"
+          onClick={() => openApp('whatsapp-business')}
+        >
+          WhatsApp Business
+        </Button>
+        <Button
+          className="w-full text-muted-foreground"
+          size="lg"
+          variant="ghost"
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface FollowUpItem {
   id: string;
@@ -28,8 +75,8 @@ interface FollowUpCardProps {
 
 export default function FollowUpCard({ followUp, onComplete, isOverdue = false, isPreview = false }: FollowUpCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showChooser, setShowChooser] = useState(false);
 
-  const whatsappLink = generateWhatsAppLink(followUp.visitors.phone_number, followUp.message_template);
   const daysUntil = getDaysUntilFollowUp(followUp.scheduled_date);
   const messageTypeLabel = followUp.message_type.charAt(0).toUpperCase() + followUp.message_type.slice(1).replace('-', ' ');
 
@@ -37,7 +84,7 @@ export default function FollowUpCard({ followUp, onComplete, isOverdue = false, 
   const phoneForCall = followUp.visitors.phone_number.replace(/[\s\-\(\)]/g, '');
 
   const handleOpenWhatsApp = () => {
-    window.open(whatsappLink, '_blank');
+    setShowChooser(true);
   };
 
   const handleCall = () => {
@@ -58,6 +105,13 @@ export default function FollowUpCard({ followUp, onComplete, isOverdue = false, 
 
   return (
     <div className={`border rounded-lg p-4 transition-colors ${isOverdue ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'}`}>
+      {showChooser && (
+        <WhatsAppChooser
+          phone={followUp.visitors.phone_number}
+          message={followUp.message_template}
+          onClose={() => setShowChooser(false)}
+        />
+      )}
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">

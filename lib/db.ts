@@ -68,17 +68,36 @@ export async function createVisitor(name: string, phoneNumber: string, dateVisit
   if (supabase) {
     const { data, error } = await supabase
       .from('visitors')
-      .insert([
-        {
-          name,
-          phone_number: phoneNumber,
-          date_visited: dateVisited,
-        },
-      ])
+      .insert([{ name, phone_number: phoneNumber, date_visited: dateVisited }])
       .select()
       .single();
 
     if (error) throw error;
+
+    // Create follow-ups for the new visitor
+    const visitDate = new Date(dateVisited);
+    const schedule: Array<{ days: number; type: 'welcome' | 'check-in' | 'invitation' | 'engagement' | 'pastoral'; message: string }> = [
+      { days: 0,  type: 'welcome',    message: 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.' },
+      { days: 2,  type: 'check-in',   message: 'Hi, we hope you had a blessed time at our service last time. How are you doing?' },
+      { days: 5,  type: 'invitation', message: 'You are invited to join us for a special event this weekend. We would love to see you there!' },
+      { days: 10, type: 'engagement', message: 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.' },
+      { days: 20, type: 'pastoral',   message: 'We care about your spiritual journey. Is there anything we can pray for you about?' },
+    ];
+
+    const followUps = schedule.map(({ days, type, message }) => {
+      const scheduled = new Date(visitDate);
+      scheduled.setDate(scheduled.getDate() + days);
+      return {
+        visitor_id: data.id,
+        scheduled_date: scheduled.toISOString().split('T')[0],
+        message_template: message,
+        message_type: type,
+      };
+    });
+
+    const { error: followUpError } = await supabase.from('follow_ups').insert(followUps);
+    if (followUpError) throw followUpError;
+
     return data;
   }
 
@@ -181,6 +200,24 @@ export async function deleteVisitor(id: string) {
   initializeMockData();
   mockVisitors = mockVisitors.filter((v) => v.id !== id);
   mockFollowUps = mockFollowUps.filter((f) => f.visitor_id !== id);
+}
+
+export async function bulkDeleteVisitors(ids: string[]) {
+  if (!ids.length) return;
+
+  if (supabase) {
+    const { error } = await supabase
+      .from('visitors')
+      .delete()
+      .in('id', ids);
+
+    if (error) throw error;
+    return;
+  }
+
+  initializeMockData();
+  mockVisitors = mockVisitors.filter((v) => !ids.includes(v.id));
+  mockFollowUps = mockFollowUps.filter((f) => !ids.includes(f.visitor_id));
 }
 
 // Follow-up operations
