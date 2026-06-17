@@ -42,7 +42,6 @@ FoloUp is a fully functional mobile-first church visitor follow-up management sy
 The app runs perfectly right now with sample data:
 
 ```bash
-cd /vercel/share/v0-project
 pnpm dev
 # Open http://localhost:3000
 ```
@@ -150,7 +149,7 @@ All calculated relative to visitor's attendance date.
 ## 📁 Project Structure
 
 ```
-/vercel/share/v0-project/
+folo_up/
 ├── app/
 │   ├── page.tsx                 # Dashboard home
 │   ├── add-visitor/page.tsx     # Add visitor form
