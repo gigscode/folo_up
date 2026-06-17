@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ThemeToggle from './theme-toggle';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -11,7 +12,7 @@ export default function Navigation() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-16 relative">
           <Link
             href="/"
             className={`flex flex-col items-center justify-center w-16 h-16 transition-colors ${
@@ -71,6 +72,10 @@ export default function Navigation() {
             <span className="text-xl">🔐</span>
             <span className="text-xs mt-1 font-medium">Admin</span>
           </Link>
+
+          <div className="absolute right-4">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </nav>
