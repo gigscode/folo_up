@@ -20,11 +20,21 @@ export function isDatabaseConnected(): boolean {
 // Mock data storage
 let mockVisitors: Visitor[] = [];
 let mockFollowUps: FollowUp[] = [];
+let mockMessageTemplates: { [key: string]: string } = {};
 let initialized = false;
 
 function initializeMockData() {
   if (initialized) return;
   initialized = true;
+
+  // Initialize default message templates
+  mockMessageTemplates = {
+    'welcome': 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.',
+    'check-in': 'Hi, we hope you had a blessed time at our service last time. How are you doing?',
+    'invitation': 'You are invited to join us for a special event this weekend. We would love to see you there!',
+    'engagement': 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.',
+    'pastoral': 'We care about your spiritual journey. Is there anything we can pray for you about?',
+  };
 
   const today = new Date();
   const tomorrow = new Date(today);
@@ -74,25 +84,19 @@ function initializeMockData() {
       'engagement',
       'pastoral',
     ];
-    const messages = [
-      'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.',
-      'Hi, we hope you had a blessed time at our service last time. How are you doing?',
-      'You are invited to join us for a special event this weekend. We would love to see you there!',
-      'We wanted to check in and see how you are doing. Your presence at church means a lot to us.',
-      'We care about your spiritual journey. Is there anything we can pray for you about?',
-    ];
 
     followUpDays.forEach((days, index) => {
       const scheduledDate = new Date(visitDate);
       scheduledDate.setDate(scheduledDate.getDate() + days);
       const isCompleted = scheduledDate < today && Math.random() > 0.4;
+      const messageType = messageTypes[index];
 
       mockFollowUps.push({
         id: `followup-${visitor.id}-${days}`,
         visitor_id: visitor.id,
         scheduled_date: scheduledDate.toISOString().split('T')[0],
-        message_template: messages[index],
-        message_type: messageTypes[index],
+        message_template: mockMessageTemplates[messageType],
+        message_type: messageType,
         completed: isCompleted,
         completed_at: isCompleted ? new Date(scheduledDate.getTime() + 86400000).toISOString() : null,
         created_at: visitDate.toISOString(),
@@ -469,4 +473,33 @@ export async function updateVisitor(
     visitor.updated_at = new Date().toISOString();
   }
   return visitor;
+}
+
+// Message Template Management
+export async function getMessageTemplates() {
+  initializeMockData();
+  return mockMessageTemplates;
+}
+
+export async function updateMessageTemplate(type: string, message: string) {
+  initializeMockData();
+  mockMessageTemplates[type] = message;
+  return mockMessageTemplates;
+}
+
+export async function addMessageTemplate(type: string, message: string) {
+  initializeMockData();
+  mockMessageTemplates[type] = message;
+  return mockMessageTemplates;
+}
+
+export async function deleteMessageTemplate(type: string) {
+  initializeMockData();
+  delete mockMessageTemplates[type];
+  return mockMessageTemplates;
+}
+
+export async function getMessageTemplate(type: string): Promise<string> {
+  initializeMockData();
+  return mockMessageTemplates[type] || '';
 }

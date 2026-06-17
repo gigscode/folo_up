@@ -28,24 +28,20 @@ interface FollowUpCardProps {
 
 export default function FollowUpCard({ followUp, onComplete, isOverdue = false, isPreview = false }: FollowUpCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [showCopyConfirm, setShowCopyConfirm] = useState(false);
 
   const whatsappLink = generateWhatsAppLink(followUp.visitors.phone_number, followUp.message_template);
   const daysUntil = getDaysUntilFollowUp(followUp.scheduled_date);
   const messageTypeLabel = followUp.message_type.charAt(0).toUpperCase() + followUp.message_type.slice(1).replace('-', ' ');
 
+  // Clean phone number for tel link (remove spaces, +, dashes)
+  const phoneForCall = followUp.visitors.phone_number.replace(/[\s\-\(\)]/g, '');
+
   const handleOpenWhatsApp = () => {
     window.open(whatsappLink, '_blank');
   };
 
-  const handleCopyMessage = async () => {
-    try {
-      await navigator.clipboard.writeText(followUp.message_template);
-      setShowCopyConfirm(true);
-      setTimeout(() => setShowCopyConfirm(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy message:', err);
-    }
+  const handleCall = () => {
+    window.location.href = `tel:${phoneForCall}`;
   };
 
   const handleMarkComplete = async () => {
@@ -93,15 +89,15 @@ export default function FollowUpCard({ followUp, onComplete, isOverdue = false, 
             className="flex-1 font-semibold"
             size="lg"
           >
-            Open WhatsApp
+            WhatsApp
           </Button>
           <Button
-            onClick={handleCopyMessage}
+            onClick={handleCall}
             variant="outline"
             className="flex-1 font-semibold"
             size="lg"
           >
-            {showCopyConfirm ? '✓ Copied' : 'Copy Message'}
+            Call
           </Button>
           <Button
             onClick={handleMarkComplete}

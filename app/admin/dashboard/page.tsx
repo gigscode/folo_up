@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { getAllVisitors, getAnalytics, deleteVisitor } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import BulkUploadCSV from '@/components/bulk-upload-csv';
+import MessageTemplateEditor from '@/components/message-template-editor';
 import { Visitor } from '@/lib/db';
 
 export default function AdminDashboard() {
@@ -15,7 +16,7 @@ export default function AdminDashboard() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [analytics, setAnalytics] = useState({ totalVisitors: 0, completedFollowUps: 0, pendingFollowUps: 0 });
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'upload' | 'manage'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'upload' | 'manage' | 'messages'>('overview');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,12 +81,12 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-border">
-          {(['overview', 'upload', 'manage'] as const).map((tab) => (
+        <div className="flex gap-4 mb-8 border-b border-border overflow-x-auto">
+          {(['overview', 'upload', 'manage', 'messages'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -94,6 +95,7 @@ export default function AdminDashboard() {
               {tab === 'overview' && 'Overview'}
               {tab === 'upload' && 'Bulk Upload'}
               {tab === 'manage' && 'Manage Visitors'}
+              {tab === 'messages' && 'Message Templates'}
             </button>
           ))}
         </div>
@@ -213,6 +215,13 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div className="bg-card rounded-lg border border-border p-8">
+            <MessageTemplateEditor />
           </div>
         )}
       </div>
