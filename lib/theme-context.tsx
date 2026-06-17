@@ -17,24 +17,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    // Check localStorage for saved theme
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    // Check system preference if no saved theme
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
     
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
+    // Access localStorage only in browser
+    try {
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      
+      setTheme(initialTheme);
+      applyTheme(initialTheme);
+    } catch (e) {
+      // Fallback if localStorage is not available
+      setTheme('light');
+      applyTheme('light');
+    }
   }, []);
 
   const applyTheme = (newTheme: Theme) => {
-    const html = document.documentElement;
-    if (newTheme === 'dark') {
-      html.classList.add('dark');
-    } else {
-      html.classList.remove('dark');
+    try {
+      const html = document.documentElement;
+      if (newTheme === 'dark') {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+      localStorage.setItem('theme', newTheme);
+    } catch (e) {
+      // Silently fail if localStorage is not available
     }
-    localStorage.setItem('theme', newTheme);
   };
 
   const toggleTheme = () => {
@@ -43,11 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(newTheme);
   };
 
-  // Avoid hydration mismatch
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
+  // Always render children, but context may be undefined during SSR
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
@@ -57,8 +63,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+  // Return safe default if context is not available (during SSR)
   if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
+    return { theme: 'light' as Theme, toggleTheme: () => {} };
   }
   return context;
 }
