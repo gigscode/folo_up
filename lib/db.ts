@@ -36,77 +36,8 @@ function initializeMockData() {
     'pastoral': 'We care about your spiritual journey. Is there anything we can pray for you about?',
   };
 
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const twoYearsAgo = new Date(today);
-  twoYearsAgo.setDate(twoYearsAgo.getDate() - 2);
-  const fiveDaysAgo = new Date(today);
-  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-
-  // Sample visitor data
-  mockVisitors = [
-    {
-      id: 'visitor-1',
-      name: 'John Okafor',
-      phone_number: '+234 903 7121 917',
-      date_visited: twoYearsAgo.toISOString().split('T')[0],
-      notes: 'Interested in youth group activities',
-      created_at: twoYearsAgo.toISOString(),
-      updated_at: twoYearsAgo.toISOString(),
-    },
-    {
-      id: 'visitor-2',
-      name: 'Ade Adeleke',
-      phone_number: '+234 701 8643 642',
-      date_visited: fiveDaysAgo.toISOString().split('T')[0],
-      notes: 'Referred by member, very engaged',
-      created_at: fiveDaysAgo.toISOString(),
-      updated_at: fiveDaysAgo.toISOString(),
-    },
-    {
-      id: 'visitor-3',
-      name: 'Grace Chimeze',
-      phone_number: '+234 915 234 5678',
-      date_visited: today.toISOString().split('T')[0],
-      notes: '',
-      created_at: today.toISOString(),
-      updated_at: today.toISOString(),
-    },
-  ];
-
-  // Generate follow-ups for each visitor
+  mockVisitors = [];
   mockFollowUps = [];
-  mockVisitors.forEach((visitor) => {
-    const visitDate = new Date(visitor.date_visited);
-    const followUpDays = [0, 2, 5, 10, 20];
-    const messageTypes: Array<'welcome' | 'check-in' | 'invitation' | 'engagement' | 'pastoral'> = [
-      'welcome',
-      'check-in',
-      'invitation',
-      'engagement',
-      'pastoral',
-    ];
-
-    followUpDays.forEach((days, index) => {
-      const scheduledDate = new Date(visitDate);
-      scheduledDate.setDate(scheduledDate.getDate() + days);
-      const isCompleted = scheduledDate < today && Math.random() > 0.4;
-      const messageType = messageTypes[index];
-
-      mockFollowUps.push({
-        id: `followup-${visitor.id}-${days}`,
-        visitor_id: visitor.id,
-        scheduled_date: scheduledDate.toISOString().split('T')[0],
-        message_template: mockMessageTemplates[messageType],
-        message_type: messageType,
-        completed: isCompleted,
-        completed_at: isCompleted ? new Date(scheduledDate.getTime() + 86400000).toISOString() : null,
-        created_at: visitDate.toISOString(),
-        updated_at: visitDate.toISOString(),
-      });
-    });
-  });
 }
 
 // Types for database
