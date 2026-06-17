@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Navigation from '@/components/navigation';
+import PageHeader from '@/components/page-header';
 import TodayFollowUps from '@/components/today-followups';
 import OverdueFollowUps from '@/components/overdue-followups';
 import UpcomingFollowUps from '@/components/upcoming-followups';
@@ -56,21 +57,7 @@ export default function Dashboard() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">FoloUp</h1>
-              <p className="text-sm text-muted-foreground mt-1">Church Visitor Follow-up</p>
-            </div>
-            <Link href="/add-visitor">
-              <Button size="lg" className="font-semibold">
-                + Add Visitor
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PageHeader />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">

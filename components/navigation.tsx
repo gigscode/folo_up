@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from './theme-toggle';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -72,10 +71,6 @@ export default function Navigation() {
             <span className="text-xl">🔐</span>
             <span className="text-xs mt-1 font-medium">Admin</span>
           </Link>
-
-          <div className="absolute right-4">
-            <ThemeToggle />
-          </div>
         </div>
       </div>
     </nav>
