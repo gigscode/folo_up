@@ -38,3 +38,27 @@ ALTER TABLE follow_ups DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON public.visitors TO anon, authenticated, service_role;
 GRANT ALL ON public.follow_ups TO anon, authenticated, service_role;
 
+-- Message templates table
+CREATE TABLE IF NOT EXISTS message_templates (
+  key VARCHAR(50) PRIMARY KEY,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Disable Row Level Security (RLS) for anonymous access
+ALTER TABLE message_templates DISABLE ROW LEVEL SECURITY;
+
+-- Grant access privileges to anon and authenticated roles
+GRANT ALL ON public.message_templates TO anon, authenticated, service_role;
+
+-- Insert default message templates if they do not exist
+INSERT INTO message_templates (key, message) VALUES
+  ('welcome', 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.'),
+  ('check-in', 'Hi, we hope you had a blessed time at our service last time. How are you doing?'),
+  ('invitation', 'You are invited to join us for a special event this weekend. We would love to see you there!'),
+  ('engagement', 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.'),
+  ('pastoral', 'We care about your spiritual journey. Is there anything we can pray for you about?')
+ON CONFLICT (key) DO NOTHING;
+
+

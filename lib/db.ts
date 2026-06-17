@@ -74,23 +74,26 @@ export async function createVisitor(name: string, phoneNumber: string, dateVisit
 
     if (error) throw error;
 
+    // Fetch templates from database
+    const templates = await getMessageTemplates();
+
     // Create follow-ups for the new visitor
     const visitDate = new Date(dateVisited);
-    const schedule: Array<{ days: number; type: 'welcome' | 'check-in' | 'invitation' | 'engagement' | 'pastoral'; message: string }> = [
-      { days: 0,  type: 'welcome',    message: 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.' },
-      { days: 2,  type: 'check-in',   message: 'Hi, we hope you had a blessed time at our service last time. How are you doing?' },
-      { days: 5,  type: 'invitation', message: 'You are invited to join us for a special event this weekend. We would love to see you there!' },
-      { days: 10, type: 'engagement', message: 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.' },
-      { days: 20, type: 'pastoral',   message: 'We care about your spiritual journey. Is there anything we can pray for you about?' },
+    const schedule: Array<{ days: number; type: 'welcome' | 'check-in' | 'invitation' | 'engagement' | 'pastoral' }> = [
+      { days: 0,  type: 'welcome' },
+      { days: 2,  type: 'check-in' },
+      { days: 5,  type: 'invitation' },
+      { days: 10, type: 'engagement' },
+      { days: 20, type: 'pastoral' },
     ];
 
-    const followUps = schedule.map(({ days, type, message }) => {
+    const followUps = schedule.map(({ days, type }) => {
       const scheduled = new Date(visitDate);
       scheduled.setDate(scheduled.getDate() + days);
       return {
         visitor_id: data.id,
         scheduled_date: scheduled.toISOString().split('T')[0],
-        message_template: message,
+        message_template: templates[type] || '',
         message_type: type,
       };
     });
@@ -117,7 +120,7 @@ export async function createVisitor(name: string, phoneNumber: string, dateVisit
 
   mockVisitors.push(visitor);
 
-  // Create follow-ups for new visitor
+  // Create follow-ups for new visitor using mockMessageTemplates
   const visitDate = new Date(dateVisited);
   const followUpDays = [0, 2, 5, 10, 20];
   const messageTypes: Array<'welcome' | 'check-in' | 'invitation' | 'engagement' | 'pastoral'> = [
@@ -127,24 +130,18 @@ export async function createVisitor(name: string, phoneNumber: string, dateVisit
     'engagement',
     'pastoral',
   ];
-  const messages = [
-    'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.',
-    'Hi, we hope you had a blessed time at our service last time. How are you doing?',
-    'You are invited to join us for a special event this weekend. We would love to see you there!',
-    'We wanted to check in and see how you are doing. Your presence at church means a lot to us.',
-    'We care about your spiritual journey. Is there anything we can pray for you about?',
-  ];
 
   followUpDays.forEach((days, index) => {
     const scheduledDate = new Date(visitDate);
     scheduledDate.setDate(scheduledDate.getDate() + days);
+    const type = messageTypes[index];
 
     mockFollowUps.push({
       id: `followup-${id}-${days}`,
       visitor_id: id,
       scheduled_date: scheduledDate.toISOString().split('T')[0],
-      message_template: messages[index],
-      message_type: messageTypes[index],
+      message_template: mockMessageTemplates[type] || '',
+      message_type: type,
       completed: false,
       completed_at: null,
       created_at: now,
@@ -476,29 +473,115 @@ export async function updateVisitorNotes(id: string, notes: string) {
 
 // Message Template Management
 export async function getMessageTemplates() {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('key, message');
+
+    if (error) throw error;
+
+    // Auto-seed default templates if database is connected but has no templates
+    if (data.length === 0) {
+      const defaultTemplates = [
+        { key: 'welcome', message: 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.' },
+        { key: 'check-in', message: 'Hi, we hope you had a blessed time at our service last time. How are you doing?' },
+        { key: 'invitation', message: 'You are invited to join us for a special event this weekend. We would love to see you there!' },
+        { key: 'engagement', message: 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.' },
+        { key: 'pastoral', message: 'We care about your spiritual journey. Is there anything we can pray for you about?' }
+      ];
+
+      const { error: seedError } = await supabase
+        .from('message_templates')
+        .insert(defaultTemplates);
+
+      if (!seedError) {
+        const templates: { [key: string]: string } = {};
+        defaultTemplates.forEach(t => {
+          templates[t.key] = t.message;
+        });
+        return templates;
+      }
+    }
+
+    const templates: { [key: string]: string } = {};
+    data.forEach((row: any) => {
+      templates[row.key] = row.message;
+    });
+    return templates;
+  }
+
   initializeMockData();
   return mockMessageTemplates;
 }
 
 export async function updateMessageTemplate(type: string, message: string) {
+  if (supabase) {
+    const { error } = await supabase
+      .from('message_templates')
+      .upsert({ key: type, message, updated_at: new Date().toISOString() });
+
+    if (error) throw error;
+    return getMessageTemplates();
+  }
+
   initializeMockData();
   mockMessageTemplates[type] = message;
   return mockMessageTemplates;
 }
 
 export async function addMessageTemplate(type: string, message: string) {
+  if (supabase) {
+    const { error } = await supabase
+      .from('message_templates')
+      .insert([{ key: type, message }]);
+
+    if (error) throw error;
+    return getMessageTemplates();
+  }
+
   initializeMockData();
   mockMessageTemplates[type] = message;
   return mockMessageTemplates;
 }
 
 export async function deleteMessageTemplate(type: string) {
+  if (supabase) {
+    const { error } = await supabase
+      .from('message_templates')
+      .delete()
+      .eq('key', type);
+
+    if (error) throw error;
+    return getMessageTemplates();
+  }
+
   initializeMockData();
   delete mockMessageTemplates[type];
   return mockMessageTemplates;
 }
 
 export async function getMessageTemplate(type: string): Promise<string> {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('message')
+      .eq('key', type)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data.message;
+
+    // Fallback to default if not found in database
+    const defaultTemplates: { [key: string]: string } = {
+      'welcome': 'Welcome to our church! We are so glad you visited us. Looking forward to seeing you again.',
+      'check-in': 'Hi, we hope you had a blessed time at our service last time. How are you doing?',
+      'invitation': 'You are invited to join us for a special event this weekend. We would love to see you there!',
+      'engagement': 'We wanted to check in and see how you are doing. Your presence at church means a lot to us.',
+      'pastoral': 'We care about your spiritual journey. Is there anything we can pray for you about?',
+    };
+    return defaultTemplates[type] || '';
+  }
+
   initializeMockData();
   return mockMessageTemplates[type] || '';
 }

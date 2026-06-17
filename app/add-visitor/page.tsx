@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Navigation from '@/components/navigation';
-import { createVisitor, createFollowUp } from '@/lib/db';
-import { FOLLOWUP_SCHEDULE, calculateScheduledDate, formatDateForDb, isValidPhoneNumber } from '@/lib/followup-engine';
+import { createVisitor } from '@/lib/db';
+import { isValidPhoneNumber } from '@/lib/followup-engine';
 
 export default function AddVisitorPage() {
   const router = useRouter();
@@ -50,23 +50,12 @@ export default function AddVisitorPage() {
     try {
       setIsLoading(true);
 
-      // Create visitor
+      // Create visitor (which also creates follow-ups)
       const visitor = await createVisitor(
         formData.name.trim(),
         formData.phoneNumber.trim(),
         formData.dateVisited
       );
-
-      // Create follow-up schedule
-      for (const schedule of FOLLOWUP_SCHEDULE) {
-        const scheduledDate = calculateScheduledDate(new Date(formData.dateVisited), schedule.daysAfter);
-        await createFollowUp(
-          visitor.id,
-          formatDateForDb(scheduledDate),
-          schedule.template,
-          schedule.type
-        );
-      }
 
       // Redirect to visitor profile
       router.push(`/visitor/${visitor.id}`);
