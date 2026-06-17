@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { generateWhatsAppLink, formatDate, getDaysUntilFollowUp } from '@/lib/followup-engine';
+import { formatDate, getDaysUntilFollowUp } from '@/lib/followup-engine';
 import { markFollowUpComplete } from '@/lib/db';
 
 interface FollowUpItem {
@@ -29,14 +29,18 @@ interface FollowUpCardProps {
 export default function FollowUpCard({ followUp, onComplete, isOverdue = false, isPreview = false }: FollowUpCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const whatsappLink = generateWhatsAppLink(followUp.visitors.phone_number, followUp.message_template);
+  const cleanPhone = followUp.visitors.phone_number.replace(/[^\d+]/g, '');
+  const encodedMessage = encodeURIComponent(followUp.message_template);
   const daysUntil = getDaysUntilFollowUp(followUp.scheduled_date);
   const messageTypeLabel = followUp.message_type.charAt(0).toUpperCase() + followUp.message_type.slice(1).replace('-', ' ');
-
   const phoneForCall = followUp.visitors.phone_number.replace(/[\s\-\(\)]/g, '');
 
   const handleOpenWhatsApp = () => {
-    window.open(whatsappLink, '_blank');
+    // Use whatsapp-business:// scheme directly — on devices where the user
+    // has set WhatsApp Business as default this will open it immediately.
+    // On devices without WhatsApp Business installed, the OS will fall back
+    // to the regular WhatsApp app or prompt to choose.
+    window.location.href = `whatsapp://send?phone=${cleanPhone}&text=${encodedMessage}`;
   };
 
   const handleCall = () => {
@@ -83,9 +87,19 @@ export default function FollowUpCard({ followUp, onComplete, isOverdue = false, 
       {/* Actions */}
       {!isPreview ? (
         <div className="flex gap-2">
-          <Button onClick={handleOpenWhatsApp} className="flex-1 font-semibold" size="lg">
-            WhatsApp
-          </Button>
+          {/* Visible WhatsApp button with hidden Business link overlaid */}
+          <div className="relative flex-1">
+            <Button className="w-full font-semibold" size="lg" onClick={handleOpenWhatsApp}>
+              WhatsApp
+            </Button>
+            {/* Hidden anchor that fires whatsapp-business:// — keeps OS default intact */}
+            <a
+              href={`whatsapp-business://send?phone=${cleanPhone}&text=${encodedMessage}`}
+              className="absolute inset-0 opacity-0 pointer-events-none"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+          </div>
           <Button onClick={handleCall} variant="outline" className="flex-1 font-semibold" size="lg">
             Call
           </Button>
