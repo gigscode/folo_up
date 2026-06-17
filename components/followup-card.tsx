@@ -17,29 +17,31 @@ function WhatsAppChooser({ phone, message, onClose }: { phone: string; message: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
+      className="fixed inset-0 z-[40] flex items-end justify-center bg-black/50"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-card rounded-t-2xl p-6 space-y-3"
+        className="w-full max-w-md bg-card rounded-t-2xl p-6 pb-28"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-center text-sm font-semibold text-muted-foreground mb-2">Open with</p>
-        <Button
-          className="w-full font-semibold text-base"
-          size="lg"
-          onClick={() => openApp('whatsapp')}
-        >
-          WhatsApp
-        </Button>
-        <Button
-          className="w-full font-semibold text-base"
-          size="lg"
-          variant="outline"
-          onClick={() => openApp('whatsapp-business')}
-        >
-          WhatsApp Business
-        </Button>
+        <p className="text-center text-sm font-semibold text-muted-foreground mb-4">Open with</p>
+        <div className="flex gap-3 mb-3">
+          <Button
+            className="flex-1 font-semibold text-base"
+            size="lg"
+            onClick={() => openApp('whatsapp')}
+          >
+            WhatsApp
+          </Button>
+          <Button
+            className="flex-1 font-semibold text-base"
+            size="lg"
+            variant="outline"
+            onClick={() => openApp('whatsapp-business')}
+          >
+            Business
+          </Button>
+        </div>
         <Button
           className="w-full text-muted-foreground"
           size="lg"
