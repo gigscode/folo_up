@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Navigation from '@/components/navigation';
 import FollowUpCard from '@/components/followup-card';
-import { getVisitor, getFollowUpsForVisitor, deleteVisitor } from '@/lib/db';
+import { getVisitor, getFollowUpsForVisitor, deleteVisitor, updateVisitorNotes } from '@/lib/db';
 import { formatDate } from '@/lib/followup-engine';
 
 interface Visitor {
@@ -15,6 +15,7 @@ interface Visitor {
   name: string;
   phone_number: string;
   date_visited: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +43,9 @@ export default function VisitorProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   useEffect(() => {
     loadVisitorData();
@@ -89,6 +93,32 @@ export default function VisitorProfilePage() {
       setError('Failed to delete visitor');
       setIsDeleting(false);
     }
+  };
+
+  const handleEditNotes = () => {
+    setNotesDraft(visitor?.notes || '');
+    setIsEditingNotes(true);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!visitor) return;
+
+    try {
+      setIsSavingNotes(true);
+      await updateVisitorNotes(visitor.id, notesDraft);
+      setVisitor({ ...visitor, notes: notesDraft });
+      setIsEditingNotes(false);
+    } catch (err) {
+      console.error('Error saving notes:', err);
+      setError('Failed to save notes');
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
+
+  const handleCancelNotes = () => {
+    setIsEditingNotes(false);
+    setNotesDraft('');
   };
 
   if (isLoading) {
@@ -183,8 +213,63 @@ export default function VisitorProfilePage() {
             </div>
           </div>
 
+          {/* Notes Section */}
+          <div className="pt-4 border-t border-border mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Notes</p>
+              {!isEditingNotes && (
+                <Button
+                  onClick={handleEditNotes}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  {visitor.notes ? 'Edit' : 'Add'}
+                </Button>
+              )}
+            </div>
+            
+            {isEditingNotes ? (
+              <div className="space-y-3">
+                <textarea
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  placeholder="Add notes about this visitor..."
+                  className="w-full min-h-24 p-3 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveNotes}
+                    disabled={isSavingNotes}
+                    size="sm"
+                    className="flex-1"
+                  >
+                    {isSavingNotes ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    onClick={handleCancelNotes}
+                    disabled={isSavingNotes}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-background rounded-lg p-3 min-h-12 text-foreground">
+                {visitor.notes ? (
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{visitor.notes}</p>
+                ) : (
+                  <p className="text-muted-foreground text-sm italic">No notes yet</p>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+          <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
             <div className="text-center py-3">
               <p className="text-2xl font-bold text-primary">{completedFollowUps.length}</p>
               <p className="text-xs text-muted-foreground mt-1">Completed Follow-ups</p>

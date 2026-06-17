@@ -51,6 +51,7 @@ function initializeMockData() {
       name: 'John Okafor',
       phone_number: '+234 903 7121 917',
       date_visited: twoYearsAgo.toISOString().split('T')[0],
+      notes: 'Interested in youth group activities',
       created_at: twoYearsAgo.toISOString(),
       updated_at: twoYearsAgo.toISOString(),
     },
@@ -59,6 +60,7 @@ function initializeMockData() {
       name: 'Ade Adeleke',
       phone_number: '+234 701 8643 642',
       date_visited: fiveDaysAgo.toISOString().split('T')[0],
+      notes: 'Referred by member, very engaged',
       created_at: fiveDaysAgo.toISOString(),
       updated_at: fiveDaysAgo.toISOString(),
     },
@@ -67,6 +69,7 @@ function initializeMockData() {
       name: 'Grace Chimeze',
       phone_number: '+234 915 234 5678',
       date_visited: today.toISOString().split('T')[0],
+      notes: '',
       created_at: today.toISOString(),
       updated_at: today.toISOString(),
     },
@@ -112,6 +115,7 @@ export interface Visitor {
   name: string;
   phone_number: string;
   date_visited: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -156,6 +160,7 @@ export async function createVisitor(name: string, phoneNumber: string, dateVisit
     name,
     phone_number: phoneNumber,
     date_visited: dateVisited,
+    notes: '',
     created_at: now,
     updated_at: now,
   };
@@ -470,6 +475,32 @@ export async function updateVisitor(
     visitor.name = name;
     visitor.phone_number = phoneNumber;
     visitor.date_visited = dateVisited;
+    visitor.updated_at = new Date().toISOString();
+  }
+  return visitor;
+}
+
+// Update visitor notes
+export async function updateVisitorNotes(id: string, notes: string) {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('visitors')
+      .update({
+        notes,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  initializeMockData();
+  const visitor = mockVisitors.find((v) => v.id === id);
+  if (visitor) {
+    visitor.notes = notes;
     visitor.updated_at = new Date().toISOString();
   }
   return visitor;

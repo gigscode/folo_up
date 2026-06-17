@@ -12,6 +12,7 @@ interface Visitor {
   name: string;
   phone_number: string;
   date_visited: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -82,16 +83,21 @@ export default function VisitorsPage() {
             {visitors.map((visitor) => (
               <Link key={visitor.id} href={`/visitor/${visitor.id}`}>
                 <div className="border border-border rounded-lg p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex-1">
                       <h3 className="font-semibold text-foreground text-lg">{visitor.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{visitor.phone_number}</p>
+                      <p className="text-sm text-muted-foreground">{visitor.phone_number}</p>
                     </div>
                     <div className="text-right text-sm text-muted-foreground">
                       <p>Visited</p>
                       <p className="font-medium text-foreground">{formatDate(new Date(visitor.date_visited))}</p>
                     </div>
                   </div>
+                  {visitor.notes && (
+                    <p className="text-xs text-muted-foreground bg-secondary/30 rounded p-2 line-clamp-2">
+                      {visitor.notes}
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}
